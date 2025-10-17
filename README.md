@@ -1,119 +1,234 @@
-# phpauth
+# PHP Authentication with Azure Active Directory
 
-Based on:
+A demonstration project showing how to implement secure authentication and authorization using Azure Active Directory (AAD) with Azure App Service. This project showcases a microservices architecture with a PHP frontend and backend, including OAuth 2.0 On-Behalf-Of (OBO) flow for accessing Microsoft Graph API.
 
-<https://docs.microsoft.com/en-us/azure/app-service/tutorial-auth-aad?pivots=platform-linux>
+## Overview
 
-## Steps to do
+This project demonstrates:
+
+- **Azure App Service Authentication** - Built-in authentication with Azure Active Directory
+- **Microservices Architecture** - Separate frontend and backend applications
+- **Token-based Authentication** - OAuth 2.0 access tokens for API security
+- **On-Behalf-Of Flow** - Accessing Microsoft Graph API on behalf of authenticated users
+- **API Security** - Securing backend APIs with AAD tokens
+
+### Architecture
+
+```
+┌─────────────────┐         ┌─────────────────┐
+│   Frontend      │         │    Backend      │
+│   Web App       │────────▶│      API        │
+│  (thx1140front) │         │  (thx1140back)  │
+└─────────────────┘         └─────────────────┘
+         │                           │
+         ▼                           ▼
+┌─────────────────────────────────────────────┐
+│     Azure Active Directory (AAD)             │
+└─────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Microsoft Graph │
+└─────────────────┘
+```
+
+## Key Features
+
+- ✅ Azure App Service built-in authentication (Easy Auth)
+- ✅ Azure Active Directory integration
+- ✅ Secure token management with automatic refresh
+- ✅ OAuth 2.0 On-Behalf-Of flow for delegated API access
+- ✅ Microsoft Graph API integration
+- ✅ Backend API protection with token validation
+- ✅ Debug utilities for development and troubleshooting
+
+## Quick Start
+
+### Prerequisites
+
+- Azure subscription
+- Azure CLI installed
+- PHP 7.4 or higher (for local development)
+
+### 1. Deploy Infrastructure
 
 ```bash
+# Create resource group
 az group create --name phpauth --location "West Europe"
 
+# Create App Service plan
 az appservice plan create --name plan1 --resource-group phpauth --sku S1 --is-linux
 
+# Create web apps
 az webapp create --resource-group phpauth --plan plan1 --name thx1140front --runtime "PHP|7.4" 
-
 az webapp create --resource-group phpauth --plan plan1 --name thx1140back --runtime "PHP|7.4" 
+```
 
-rm back.zip
+### 2. Deploy Applications
+
+```bash
+# Deploy backend
+rm -f back.zip
 zip -j back.zip back/*.*
 az webapp deployment source config-zip --resource-group phpauth --name thx1140back --src back.zip
 
-rm front.zip
+# Deploy frontend
+rm -f front.zip
 zip -j front.zip front/*.*
 az webapp deployment source config-zip --resource-group phpauth --name thx1140front --src front.zip
 ```
 
-MANUAL: enable auth on thx1140back
+### 3. Configure Authentication
 
-MANUAL enable auth on thx1140front
+For detailed setup instructions, see the [Setup Guide](docs/SETUP.md).
 
-front app id: eaf8e871-0239-4b27-825b-131bab583010
+**Quick summary:**
+1. Create Azure AD app registrations for frontend and backend
+2. Configure backend to expose an API
+3. Grant frontend permissions to access backend
+4. Enable App Service authentication on both apps
+5. Configure login parameters for token audience
 
-back  app id: fee96351-9eda-4fb7-a91b-ac46e9c07358
+## Documentation
 
-MANUAL: give frontend api permissons on backend (App Registration, 'frontend': API Permissions)
+Comprehensive documentation is available in the `docs/` directory:
 
-MANUAL: add front-end client app id to backend trusted clients (App Registration, 'backend': Expose an API )
-configure auth method on frontend to issue token for backend audience
+- **[Setup Guide](docs/SETUP.md)** - Complete setup and configuration instructions
+- **[Architecture](docs/ARCHITECTURE.md)** - System architecture and design
+- **[API Reference](docs/API.md)** - API endpoints and usage
+- **[Development Guide](docs/DEVELOPMENT.md)** - Local development and contributing
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
-```bash
-authSettings=$(az webapp auth show -g phpauth -n thx1140front)
-authSettings=$(echo "$authSettings" | jq '.properties' | jq '.identityProviders.azureActiveDirectory.login += {"loginParameters":["scope=openid profile email offline_access api://fee96351-9eda-4fb7-a91b-ac46e9c07358/user_impersonation"]}')
-echo $authSettings
-az webapp auth set --resource-group phpauth --name thx1140front --body "$authSettings"
+## Project Structure
+
+```
+phpauth/
+├── back/                   # Backend API application
+│   └── index.php          # Main API endpoint
+├── front/                  # Frontend web application
+│   ├── index.php          # Main page with authentication
+│   └── process.php        # Command processor
+├── docs/                   # Documentation
+├── auth.json              # Sample authentication configuration
+└── README.md              # This file
 ```
 
-```bash
-id=$(az ad app show --id fee96351-9eda-4fb7-a91b-ac46e9c07358 --query objectId --output tsv)
-echo $id
-az rest --method PATCH --url https://graph.microsoft.com/v1.0/applications/$id --body "{'api':{'requestedAccessTokenVersion':2}}"
-```
+## Components
 
-MANUAL: copy token in line below to test
+### Frontend Application
+
+The frontend (`front/`) is a PHP web application that:
+- Authenticates users via Azure Active Directory
+- Displays debug information and environment details
+- Makes authenticated requests to the backend API
+- Implements OAuth 2.0 On-Behalf-Of flow
+- Retrieves user information from Microsoft Graph
+
+### Backend Application
+
+The backend (`back/`) is a simple PHP API that:
+- Requires Azure AD authentication
+- Returns server information in JSON format
+- Is protected by Azure App Service authentication
+
+## Authentication Flow
+
+1. **User Authentication**: User logs in via Azure AD through the frontend
+2. **Access Token**: Frontend obtains an access token for the backend API
+3. **API Call**: Frontend calls backend API with the access token
+4. **On-Behalf-Of Flow**: Frontend exchanges token to access Microsoft Graph
+5. **Graph API**: Frontend retrieves user data from Microsoft Graph
+
+## Security Features
+
+- 🔒 Azure App Service built-in authentication
+- 🔒 Automatic token validation and refresh
+- 🔒 Token-based API authorization
+- 🔒 HTTPS enforced for all communications
+- 🔒 Secure token storage
+- 🔒 Client secret management via Azure Key Vault (recommended)
+
+## Testing
+
+Test the backend API with a token:
 
 ```bash
-TOKEN="<snip>"
+# Get token from the frontend or /.auth/me endpoint
+TOKEN="your-access-token"
+
+# Test backend
 curl -H "Authorization: Bearer ${TOKEN}" https://thx1140back.azurewebsites.net
 ```
 
-MANUAL: admin consent on backend, so that it can get an access token for graph
-
-MANUAL: create secret on backend app registration
-
-MANUAL: update `back/index.php` with secret
-
-## Sample on behalf of 
-```bash
-response=$(curl -X POST -F 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer' \
-             -F 'client_id=fee96351-9eda-4fb7-a91b-ac46e9c07358' \
-             -F 'client_secret=<snip>' \
-             -F "assertion=${TOKEN}" \
-             -F "scope=openid profile email" \
-             -F "requested_token_use=on_behalf_of" \
-        https://login.microsoftonline.com/thx1139corp.onmicrosoft.com/oauth2/v2.0/token|jq -r ".access_token")
-
-curl -H "Authorization: Bearer ${response}" https://graph.microsoft.com/oidc/userinfo
+Expected response:
+```json
+{ "server": "hostname" }
 ```
 
-## Links
+## Configuration
 
-<https://stackoverflow.com/questions/55282008/is-it-possible-to-add-multiple-audiences-to-azureadbearer-token>
+Key configuration values to customize:
 
-<https://www.ludovicmedard.com/azure-api-management-and-oauth-tokens-for-multiple-backend-services/>
+- `thx1140front` / `thx1140back` - Replace with your unique app names
+- Frontend app ID: `eaf8e871-0239-4b27-825b-131bab583010`
+- Backend app ID: `fee96351-9eda-4fb7-a91b-ac46e9c07358`
+- Tenant ID: Update in frontend code for OBO flow
 
-behind reverse proxy
+See [Setup Guide](docs/SETUP.md) for detailed configuration instructions.
 
-```bash
-az rest --uri /subscriptions/5053b074-62e4-469e-91a2-f56553bdfebb/resourceGroups/rg-appsvc/providers/Microsoft.Web/sites/app1thx1139/config/authsettingsV2?api-version=2020-09-01 --method get
+## Development
 
-az rest --uri /subscriptions/5053b074-62e4-469e-91a2-f56553bdfebb/resourceGroups/rg-appsvc/providers/Microsoft.Web/sites/app1thx1139/config/authsettingsV2?api-version=2020-09-01 --method get > auth.json
+For local development and contributing:
 
-az rest --uri /subscriptions/5053b074-62e4-469e-91a2-f56553bdfebb/resourceGroups/rg-appsvc/providers/Microsoft.Web/sites/app1thx1139/config/authsettingsV2?api-version=2020-09-01 --method put --body @auth.json 
-```
+1. Clone the repository
+2. Review the [Development Guide](docs/DEVELOPMENT.md)
+3. Configure Azure AD for your development environment
+4. Deploy to Azure for testing (local auth is limited)
 
-## More links
+## Troubleshooting
 
-<https://azure.github.io/AppService/2021/03/26/Secure-resilient-site-with-custom-domain.html>
+Common issues and solutions:
 
-Example call back links and token store
+- **Authentication errors** - Check app registration configuration
+- **Token issues** - Verify audience and permissions
+- **API call failures** - Check authorization headers and backend authentication
 
-<https://thx1140front.azurewebsites.net/.auth/login/aad/callback>
+See the [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for detailed solutions.
 
-<https://thx1140front.azurewebsites.net/.auth/me>
+## Resources
 
-<https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-add-app-roles-in-azure-ad-apps>
+### Microsoft Documentation
 
-<https://docs.microsoft.com/en-us/azure/app-service/tutorial-auth-aad?pivots=platform-linux>
+- [Azure App Service Authentication](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization)
+- [Azure AD OAuth 2.0](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow)
+- [On-Behalf-Of Flow](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow)
+- [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/)
 
-<https://auth0.com/docs/secure/tokens/access-tokens>
+### Related Articles
 
-ID Tokens should not be used to gain access to an API. Each token contains information for the intended audience (which is usually the recipient). Per the OpenID Connect specification, the audience of the ID Token (indicated by the aud claim) must be the client ID of the application making the authentication request. If this is not the case, you should not trust the token. Conversely, an API expects a token with the aud value to equal the API's unique identifier. Therefore, unless you maintain control over both the application and the API, sending an ID Token to an API will generally not work. Furthermore, the ID Token is signed with a secret known only to the application itself. If an API were to accept an ID Token, it would have no way of knowing if the application has modified the token (such as adding more scopes) and resigned it.
+- [OAuth 2.0 Token Types](https://auth0.com/docs/secure/tokens/access-tokens)
+- [Multiple Backend Services](https://www.ludovicmedard.com/azure-api-management-and-oauth-tokens-for-multiple-backend-services/)
+- [Custom Domains with App Service](https://azure.github.io/AppService/2021/03/26/Secure-resilient-site-with-custom-domain.html)
 
-## More notes
+## Important Security Notes
 
-```bash
-api://<back app client id>/user_impersonation
-```
+⚠️ **ID Tokens vs Access Tokens**: ID Tokens should not be used to access APIs. Per the OpenID Connect specification, the audience (aud claim) of the ID Token must be the client ID of the application. APIs require access tokens with the API's unique identifier as the audience.
 
-Tool tip: Allow the application to access thx1140back on behalf of the signed-in user
+⚠️ **Client Secrets**: Never commit secrets to source control. Use Azure Key Vault or App Service configuration for secret management.
+
+⚠️ **Production Security**: The `process.php` endpoint is for demonstration purposes only. Secure or remove it in production environments.
+
+## License
+
+This is a demonstration project for educational purposes.
+
+## Contributing
+
+Contributions are welcome! Please see the [Development Guide](docs/DEVELOPMENT.md) for guidelines.
+
+## Support
+
+For issues and questions:
+- Check the [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
+- Review [Azure documentation](https://docs.microsoft.com/azure/)
+- Open an issue on GitHub
