@@ -95,6 +95,7 @@ Comprehensive documentation is available in the `docs/` directory:
 
 - **[Quick Reference](docs/QUICKREF.md)** - ⚡ Quick reference for common tasks and commands
 - **[Setup Guide](docs/SETUP.md)** - Complete setup and configuration instructions
+- **[Security Guide](docs/SECURITY.md)** - 🔒 Security best practices and improvements
 - **[Architecture](docs/ARCHITECTURE.md)** - System architecture and design
 - **[API Reference](docs/API.md)** - API endpoints and usage
 - **[Development Guide](docs/DEVELOPMENT.md)** - Local development and contributing
@@ -150,6 +151,12 @@ The backend (`back/`) is a simple PHP API that:
 - 🔒 HTTPS enforced for all communications
 - 🔒 Secure token storage
 - 🔒 Client secret management via Azure Key Vault (recommended)
+- 🔒 XSS protection with output escaping
+- 🔒 Sensitive data filtering in debug outputs
+- 🔒 SSL/TLS certificate verification for all external API calls
+- 🔒 Security headers to prevent common attacks
+
+See the [Security Guide](docs/SECURITY.md) for detailed information about security improvements and best practices.
 
 ## Testing
 
@@ -217,9 +224,18 @@ See the [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for detailed solutions.
 
 ⚠️ **ID Tokens vs Access Tokens**: ID Tokens should not be used to access APIs. Per the OpenID Connect specification, the audience (aud claim) of the ID Token must be the client ID of the application. APIs require access tokens with the API's unique identifier as the audience.
 
-⚠️ **Client Secrets**: Never commit secrets to source control. Use Azure Key Vault or App Service configuration for secret management.
+⚠️ **Client Secrets**: Never commit secrets to source control. Use Azure Key Vault or App Service configuration for secret management. The application now requires secrets to be provided via environment variables.
 
-⚠️ **Production Security**: The `process.php` endpoint is for demonstration purposes only. Secure or remove it in production environments.
+⚠️ **Production Security**: 
+- The debug/diagnostic endpoints expose system information and should be secured or removed in production environments.
+- The command execution endpoint (`process.php`) has been disabled for security reasons.
+- Ensure all environment variables containing sensitive information are properly secured.
+- Review the [Security Guide](docs/SECURITY.md) for comprehensive security recommendations.
+
+⚠️ **Required Configuration**: The Graph API integration requires environment variables to be set:
+- `GRAPH_CLIENT_ID`: Your Azure AD application client ID
+- `GRAPH_CLIENT_SECRET`: Your Azure AD application client secret (use Key Vault in production)
+- `GRAPH_TENANT`: Your Azure AD tenant ID or domain
 
 ## License
 

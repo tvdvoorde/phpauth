@@ -1,0 +1,52 @@
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+/tmp/
+temp/
+
+# Build artifacts
+*.zip
+dist/
+build/
+
+# Dependency directories
+vendor/
+node_modules/
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Azure specific
+.azure/
+local.settings.json
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Security - never commit these
+client_secrets.json
+credentials.json
+secrets.json
+*.secret
