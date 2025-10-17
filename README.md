@@ -93,11 +93,14 @@ For detailed setup instructions, see the [Setup Guide](docs/SETUP.md).
 
 Comprehensive documentation is available in the `docs/` directory:
 
+- **[Quick Reference](docs/QUICKREF.md)** - ⚡ Quick reference for common tasks and commands
 - **[Setup Guide](docs/SETUP.md)** - Complete setup and configuration instructions
 - **[Architecture](docs/ARCHITECTURE.md)** - System architecture and design
 - **[API Reference](docs/API.md)** - API endpoints and usage
 - **[Development Guide](docs/DEVELOPMENT.md)** - Local development and contributing
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+
+New to the project? Start with the [Quick Reference](docs/QUICKREF.md) and [Setup Guide](docs/SETUP.md)!
 
 ## Project Structure
 
@@ -224,7 +227,13 @@ This is a demonstration project for educational purposes.
 
 ## Contributing
 
-Contributions are welcome! Please see the [Development Guide](docs/DEVELOPMENT.md) for guidelines.
+Contributions are welcome! Please see the [Contributing Guide](CONTRIBUTING.md) for guidelines on:
+
+- Reporting bugs
+- Suggesting features
+- Submitting pull requests
+- Coding standards
+- Development workflow
 
 ## Support
 
